@@ -1,1 +1,119 @@
-VPR for connecting two tables
+-- VPR for connecting two tables
+
+Ex1:
+Открытие кредита = 
+var OD_Credit = 'Kod klienta'[ИИН/БИН]
+
+RETURN
+CALCULATE(FIRSTNONBLANK('Z_039_V_BI_CREDIT'[Дата выдачи],1), FILTER('Z_039_V_BI_CREDIT',OD_Credit = 'Z_039_V_BI_CREDIT'[ИИН/БИН]))
+
+Ex2:
+Открытие депозита = 
+var OD_Deposit = 'Kod klienta'[Код клиента]
+
+RETURN
+CALCULATE(FIRSTNONBLANK('Z039_REP_Z_BI_FOND_2021'[Дата откр.счета],1), FILTER('Z039_REP_Z_BI_FOND_2021', OD_Deposit = 'Z039_REP_Z_BI_FOND_2021'[Код клиента] && Z039_REP_Z_BI_FOND_2021[DEPOSIT OR NOT] <> BLANK()))
+
+-- Finding the minimum date:
+
+Ex1:
+Вход клиента в первый продукт = 
+var Deposit = 'Kod klienta'[Открытие депозита]
+var Credit = 'Kod klienta'[Открытие кредита]
+var UNK = 'Kod klienta'[Открытие УНК]
+var Garant = 'Kod klienta'[Открытие гарантии]
+var Card = 'Kod klienta'[Открытие Карт]
+var FastTransaction = 'Kod klienta'[Открытие Быстр Переводов]
+var temp = {Deposit, Credit, UNK, Garant, Card, FastTransaction}
+
+RETURN
+
+IF(MINX(temp, [value]) = Deposit, "Депозит",
+IF(MINX(temp, [value]) = credit, "Кредит",
+IF(MINX(temp, [value]) = UNK, "УНК",
+IF(MINX(temp, [value]) = Garant, "Гарант",
+IF(MINX(temp, [value]) = Card, "Карты",
+IF(MINX(temp, [value]) = FastTransaction,"Быстрые переводы"
+IF(MINX(temp, [value]) = deposit && MINX(temp, [value]) = credit, "Deposit + Credit"//))))))))))))))))))
+
+-- Finding the birthdate via taxcode:
+
+Ex1:
+BirthDate = 
+var IIN = 'Kod klienta'[ИИН/БИН]
+var FL = 'Kod klienta'[ФЛ/ЮЛ/ИП]
+var year1 = MID(IIN, 1, 2)
+var month1 = MID(IIN, 3, 2)
+var day1 = MID(IIN, 5, 2)
+var temp = MID(IIN, 7, 1)
+
+RETURN
+IFERROR(
+CONVERT(
+IF(LEN(IIN) < 12, BLANK(), 
+    IF(IIN = BLANK(), BLANK(), 
+        IF(FL = "ЮЛ" && month1 = "00", BLANK(),
+            IF(FL = "ЮЛ", ("01." & month1 & "." & "20" & year1),
+                IF(IIN = "000000000000" || IIN = "123456789012" || IIN = "860631300029", BLANK(),
+                    IF(CONVERT(month1, INTEGER) > 12 || CONVERT(day1, INTEGER) < 1, BLANK(),
+                        IF(CONVERT(day1, INTEGER) > 31 || CONVERT(day1, INTEGER) < 1, BLANK(), 
+                                IF(temp = "1" || temp = "2", (day1 & "." & month1 & "." & "18" & year1), 
+                                    IF(temp = "3" || temp = "4", (day1 & "." & month1 & "." & "19" & year1),
+                                        IF(temp = "5" || temp = "6", (day1 & "." & month1 & "." & "20" & year1))))))))))), DATETIME), BLANK())
+
+-- Finding the age through taxcode:
+Age = DATEDIFF('Kod klienta'[BirthDate], NOW(), YEAR)
+
+Finding the gender via taxcode:
+Ex1:
+Gender = IF('Kod klienta'[ИИН/БИН] = "000000000000", BLANK(),IF('Kod klienta'[ИИН/БИН] = BLANK(), BLANK(), IF(MOD(CONVERT(MID('Kod klienta'[ИИН/БИН], 7, 1),INTEGER), 2) = 1, "Мужчины", "Женщины")))
+
+Ex2:
+ГЕНДЕР = 
+
+var abs = 'contact_center survey'[taxcode]
+var func = CALCULATE(FIRSTNONBLANK('G_CLIHST'[PSEX],1), FILTER ('G_CLIHST', abs = G_CLIHST[TAXCODE]))
+var temp = IF(func = "F" || func = "W", "Женщины", IF(func = "M", "Мужчины", BLANK()))
+
+RETURN 
+
+IF(temp <> BLANK(), temp, IF('contact_center survey'[Gender] <> BLANK(), 'contact_center survey'[Gender], "Неправильные ИИН"))
+
+Ex3:
+Gender = 
+
+var temp = IFERROR(CONVERT(MID('contact_center survey'[taxcode], 7, 1), INTEGER), BLANK())
+
+RETURN
+    IF(LEN('contact_center survey'[taxcode]) = 12, 
+        IF('contact_center survey'[taxcode] = BLANK(), BLANK(), 
+            IF(0 < temp || temp < 7,
+                IF(MOD(temp, 2) = 1, "Мужчины", "Женщины")
+            )
+        ), BLANK()
+    )
+
+-- Finding age group:
+Ex1:
+AgeGroup = 
+var age = 'Kod klienta'[Age]
+
+RETURN 
+IF(age = BLANK(), BLANK(),
+    IF(age <= 0, BLANK(),
+        IF(age < 18, "0 - 18",
+            IF(18 <= age && age < 25, "18 - 25",
+                    IF(25 <= age && age < 40, "25 - 40",
+                        IF(40 <= age && age < 55, "40-55", "55+"))))))
+Ex2:
+Возрастная группа = 
+var age = 'contact_center survey'[Возраст]
+
+RETURN 
+IF(age = BLANK(), "Некорректные данные",
+    IF(age <= 0, "Некорректные данные",
+        IF(age < 18, "0 - 18",
+            IF(18 <= age && age < 25, "18 - 25",
+                    IF(25 <= age && age < 40, "25 - 40",
+                        IF(40 <= age && age < 55, "40-55", "55+"))))))
+
