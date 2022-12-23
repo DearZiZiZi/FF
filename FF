@@ -36,6 +36,15 @@ IF(MINX(temp, [value]) = Card, "Карты",
 IF(MINX(temp, [value]) = FastTransaction,"Быстрые переводы"
 IF(MINX(temp, [value]) = deposit && MINX(temp, [value]) = credit, "Deposit + Credit"//))))))))))))))))))
 
+Ex3:
+Открытие УНК = 
+var OD_UNK = 'Kod klienta'[Код клиента]
+
+RETURN
+CALCULATE(MIN('Z_039_V_VALUTKONTROL'[DEAFROMDATE]), 
+FILTER('Z_039_V_VALUTKONTROL', 
+OD_UNK = 'Z_039_V_VALUTKONTROL'[CLI_CODE] && Z_039_V_VALUTKONTROL[Активированные/Зареган] <> BLANK()))
+
 -- Finding the birthdate via taxcode:
 
 Ex1:
