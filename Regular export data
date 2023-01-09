@@ -1,0 +1,120 @@
+import pandas as pd
+import sqlite3
+from sqlalchemy import create_engine
+import datetime
+engine = create_engine('postgresql+psycopg2://tnaimanov:gg55ToiolEXKnm2ZDxUL0SP3rHqzHu@10.54.91.24:5432/ff_ipoteka')
+engine.connect()
+db = sqlite3.connect(':memory:')
+while True:
+    try:
+        query = '''
+            select id, created_at, changed_at, loan_issue_date, status, reason, marketing_utm_campaign, marketing_utm_source, program_id, client_id
+            from credits_creditapplication
+            where created_at >= '2022-10-01'
+        '''
+        pd.read_sql(query, engine).to_sql('credits_creditapplication', db, index=False, if_exists='replace')
+        break
+    except Exception as e:
+        print(type(e))
+        continue
+while True:
+    try:
+        query = '''
+        SELECT id, application_id
+        FROM insurances_insuranceaccident;
+        '''
+        pd.read_sql(query, engine).to_sql('insurances_insuranceaccident', db, index=False, if_exists='replace')
+        break
+    except Exception as e:
+        print(type(e))
+        continue
+while True:
+    try:
+        query = '''
+        SELECT id, application_id
+        FROM insurances_insurancepledgerproperty;
+        '''
+        pd.read_sql(query, engine).to_sql('insurances_insurancepledgerproperty', db, index=False, if_exists='replace')
+        break
+    except Exception as e:
+        print(type(e))
+        continue
+while True:
+    try:
+        query = '''
+            select id, program_code
+            from credits_program
+        '''
+        pd.read_sql(query, engine).to_sql('credits_program', db, index=False, if_exists='replace')
+        break
+    except Exception as e:
+        print(type(e))
+        continue
+while True:
+    try:
+        query = '''
+            select id, user_id
+            from users_client
+        '''
+        pd.read_sql(query, engine).to_sql('users_client', db, index=False, if_exists='replace')
+        break
+    except Exception as e:
+        print(type(e))
+        continue
+while True:
+    try:
+        query = '''
+            select id, iin
+            from users_mainuser
+        '''
+        pd.read_sql(query, engine).to_sql('users_mainuser', db, index=False, if_exists='replace')
+        break
+    except Exception as e:
+        print(type(e))
+        continue
+while True:
+    try:
+        last_id = pd.read_sql('select max(id) as max_id from credits_creditapplication', db).values[0][0]
+        query = f'''
+            select application_id, is_active, building_id
+            from credits_creditobject
+            where application_id <= {last_id}
+        '''
+        pd.read_sql(query, engine).to_sql('credits_creditobject', db, index=False, if_exists='replace')
+        break
+    except Exception as e:
+        print(type(e))
+        continue
+while True:
+    ids = pd.read_sql('select min(building_id) min_id, max(building_id) max_id from credits_creditobject', db).to_dict('records')[0]
+    try:
+        query = f'''
+            select id, address_id
+            from buildings_building
+            where id >= {ids['min_id']} and id <= {ids['max_id']}
+        '''
+        pd.read_sql(query, engine).to_sql('buildings_building', db, index=False, if_exists='replace')
+        break
+    except Exception as e:
+        print(type(e))
+        continue
+while True:
+    last_id = pd.read_sql('select max(id) as max_id from credits_creditapplication', db).values[0][0]
+    try:
+        query = f'''
+            select requested_amount, validated_amount, application_id
+            from credits_creditparams
+            where application_id <= {last_id}
+        '''
+        pd.read_sql(query, engine).to_sql('credits_creditparams', db, index=False, if_exists='replace')
+        break
+    except Exception as e:
+        print(type(e))
+        continue
+while True:
+    try:
+        query = '''
+            select creditapplication_id, realtordeal_id
+            from realtors_realtordeal_client_applications
+        '''
+        pd.read_sql(query, engine).to_sql('realtors_real
