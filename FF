@@ -146,3 +146,10 @@ IF(
     )
 )
 
+--Finding the count of special words in a column and calculate special words:
+1)Count the special words via Measure:
+Count of Promouters = COUNTROWS(FILTER('contact_center survey','contact_center survey'[NPS слова] = "Промоутеры"))
+2)Count the second special word vie Measure
+3)Summarize them and divide by number which I need. 
+Distraction Pro - Det = ([Count of Promouters] - [Count of Detractors])/ [Кол-во отзывов]
+REMEMBER: ALL MEASUREMENTS MUST HAVE THE DATA_TYPE OF Percent
