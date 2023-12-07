@@ -2,9 +2,10 @@ import pandas as pd
 import sqlite3
 from sqlalchemy import create_engine
 import datetime
-engine = create_engine('postgresql+psycopg2://tnaimanov:gg55ToiolEXKnm2ZDxUL0SP3rHqzHu@10.54.91.24:5432/ff_ipoteka')
+engine = create_engine('postgresql+psycopg2://tnaimanov:Password@Server_Name/ff_ipoteka')
 engine.connect()
 db = sqlite3.connect(':memory:')
+
 while True:
     try:
         query = '''
